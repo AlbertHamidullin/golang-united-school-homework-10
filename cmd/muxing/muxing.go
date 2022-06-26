@@ -60,13 +60,13 @@ func ReadData(w http.ResponseWriter, r *http.Request) {
 }
 
 func ReadHeaderAsInt(r *http.Request, name string) (i int, err error) {
-	var s []string = r.Header[name]
-	if len(s) != 1 {
+	var s string = r.Header.Get(name)
+	if len(s) == 0 {
 		err = fmt.Errorf("header \"%s\" is not specified", name)
 		return -1, err
 	}
 
-	i, err = strconv.Atoi(s[0])
+	i, err = strconv.Atoi(s)
 	if err != nil {
 		err = fmt.Errorf("error occured with header %s: %w", name, err)
 		return -1, err
@@ -91,7 +91,7 @@ func SumHeaders(w http.ResponseWriter, r *http.Request) {
 	}
 
 	text = strconv.Itoa(a + b)
-	w.Header().Add("a+b", text)
+	w.Header().Set("a+b", text)
 	WriteSuccessText(w, "")
 }
 
