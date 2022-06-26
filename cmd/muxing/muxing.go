@@ -14,21 +14,27 @@ import (
 func WriteSuccessText(w http.ResponseWriter, text string) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(text))
+	if len(text) > 0 {
+		w.Write([]byte(text))
+	}
 }
 
 func WriteClientErrorText(w http.ResponseWriter, text string) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
-	//w.WriteHeader(http.StatusBadRequest)
-	//w.Write([]byte(text))
+	// w.WriteHeader(http.StatusBadRequest)
+	// if len(text) > 0 {
+	// 	w.Write([]byte(text))
+	// }
 }
 
 func WriteServerErrorText(w http.ResponseWriter, text string) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
-	//w.WriteHeader(http.StatusInternalServerError)
-	//w.Write([]byte(text))
+	// w.WriteHeader(http.StatusInternalServerError)
+	// if len(text) > 0 {
+	// 	w.Write([]byte(text))
+	// }
 }
 
 func HelloName(w http.ResponseWriter, r *http.Request) {
@@ -53,37 +59,40 @@ func ReadData(w http.ResponseWriter, r *http.Request) {
 	WriteSuccessText(w, text)
 }
 
+func ReadHeaderAsInt(r *http.Request, name string) (i int, err error) {
+	var s []string = r.Header[name]
+	if len(s) != 1 {
+		err = fmt.Errorf("header \"%s\" is not specified", name)
+		return -1, err
+	}
+
+	i, err = strconv.Atoi(s[0])
+	if err != nil {
+		err = fmt.Errorf("error occured with header %s: %w", name, err)
+		return -1, err
+	}
+
+	return i, nil
+}
+
 func SumHeaders(w http.ResponseWriter, r *http.Request) {
 	var text string
 
-	var aAsString []string = r.Header["a"]
-	if len(aAsString) != 1 {
-		text = fmt.Sprintf("Header \"%s\" is not specified", "a")
-		WriteClientErrorText(w, text)
+	a, err := ReadHeaderAsInt(r, "a")
+	if err != nil {
+		WriteClientErrorText(w, err.Error())
 		return
 	}
 
-	a, err := strconv.Atoi(aAsString[0])
+	b, err := ReadHeaderAsInt(r, "b")
 	if err != nil {
-		text = fmt.Sprintf("Error occured with header %s: %s", "a", err)
-		WriteClientErrorText(w, text)
-	}
-
-	var bAsString []string = r.Header["b"]
-	if len(bAsString) != 1 {
-		text = fmt.Sprintf("Header \"%s\" is not specified", "b")
-		WriteClientErrorText(w, text)
+		WriteClientErrorText(w, err.Error())
 		return
-	}
-
-	b, err := strconv.Atoi(bAsString[0])
-	if err != nil {
-		text = fmt.Sprintf("Error occured with header %s: %s", "b", err)
-		WriteClientErrorText(w, text)
 	}
 
 	text = strconv.Itoa(a + b)
-	WriteSuccessText(w, text)
+	w.Header().Add("a+b", text)
+	WriteSuccessText(w, "")
 }
 
 // Start /** Starts the web server listener on given host and port.
@@ -96,6 +105,7 @@ func Start(host string, port int) {
 	router.HandleFunc("/bad", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}).Methods(http.MethodGet)
+
 	log.Println(fmt.Printf("Starting API server on %s:%d\n", host, port))
 	if err := http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), router); err != nil {
 		log.Fatal(err)
