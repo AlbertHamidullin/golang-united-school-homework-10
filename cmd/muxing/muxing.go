@@ -11,30 +11,23 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func WriteSuccessText(w http.ResponseWriter, text string) {
+func Write(w http.ResponseWriter, statusCode int, text string) {
 	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(statusCode)
 	if len(text) > 0 {
 		w.Write([]byte(text))
 	}
 }
+func WriteSuccessText(w http.ResponseWriter, text string) {
+	Write(w, http.StatusOK, text)
+}
 
 func WriteClientErrorText(w http.ResponseWriter, text string) {
-	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusOK)
-	// w.WriteHeader(http.StatusBadRequest)
-	// if len(text) > 0 {
-	// 	w.Write([]byte(text))
-	// }
+	Write(w, http.StatusBadRequest, text)
 }
 
 func WriteServerErrorText(w http.ResponseWriter, text string) {
-	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusOK)
-	// w.WriteHeader(http.StatusInternalServerError)
-	// if len(text) > 0 {
-	// 	w.Write([]byte(text))
-	// }
+	Write(w, http.StatusInternalServerError, text)
 }
 
 func HelloName(w http.ResponseWriter, r *http.Request) {
